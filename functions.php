@@ -10,11 +10,11 @@ register_sidebars(4, array('name'=>'Footer %d'));
 require_once( get_stylesheet_directory() . '/includes/class.cf-menus.php');
 require_once( get_stylesheet_directory() . '/includes/class.child-theme-setup.php');
 
-function cf_post_id() {
+function cf_call_layout() {
     global $wp_query;
 
     $post_id = $wp_query->get_queried_object_id();
     $cf_layout  =  new CF_Layout($post_id);
 }
 
-add_action('wp','cf_post_id');
+add_action('wp','cf_call_layout');
