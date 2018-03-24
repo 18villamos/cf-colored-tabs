@@ -5,16 +5,6 @@ class CF_Layout {
     public function __construct($post_id) {
         $this->cf_menus   =  new CF_Menus($post_id);
         $this->post_id = $post_id;
-
-        add_action( 'beans_uikit_enqueue_scripts',  array($this,'cf_enqueue_uikit_assets') );
-
-        add_action( 'template_redirect',            array($this,'override_beans_defaults' ) );
-
-        //This doesn't work for some reason, and not sure which action hook to use
-        //It's in functions.php for now.
-        add_action( '',                             array($this,'demo_footer_sidebars'));
-
-        add_filter( 'beans_layout',                 array($this,'cf_blog_sidebar') );
     }
 
     public function cf_enqueue_uikit_assets() {
@@ -66,11 +56,6 @@ class CF_Layout {
         beans_modify_action_callback( 'beans_footer_content',   array($this,'hide_beans_copyright'));
     }
 
-    public function demo_footer_sidebars() {
-        //currently not used. See functions.php.
-        register_sidebars(4, array('name'=>'Footer %d'));
-    }
-
     public function cf_blog_sidebar() {
 
         if (is_single() || is_post_type_archive('post') ) {
@@ -89,8 +74,6 @@ class CF_Layout {
 
             //centered container
             echo beans_open_markup('cf_content_header_container','div',array('class'=>'cf-content-header uk-container uk-container-center'));
-                //div indented to work around logo
-                //echo beans_open_markup('cf_content_header_indented','div',array('class'=>'cf-content-header'));
 
                     echo beans_open_markup('cf_content_header_grid','div',array('class'=>'uk-grid'));
                         echo beans_open_markup('cf_content_header_cell','div',array('class'=>'uk-width-medium-1-1'));
@@ -101,7 +84,6 @@ class CF_Layout {
                         echo beans_close_markup('cf_content_header_cell','div');
                     echo beans_close_markup('cf_content_header_grid','div');
 
-                //echo beans_close_markup('cf_content_header_indented','div');
             echo beans_close_markup('cf_content_header_container','div');
 
         echo beans_close_markup('cf_content_header_full','div');
