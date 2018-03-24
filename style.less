@@ -1,0 +1,148 @@
+/*
+* Generates CSS demonstrating section-specific colored menu tabs and section headers
+ */
+
+//Defines some colors for use throughout the site including section tabs and headers below
+@cf-green:                  #C5D65C;
+@cf-blue:                   #53BADC;
+@cf-yellow:                 #FADC53;
+@cf-orange:                 #F09D46;
+@cf-purple:                 #756486;
+@cf-basic:                  #fff;
+@cf-grey:                   #2A2D17;
+@cf-green-dark:             #255942;
+
+@base-body-background:      @cf-basic;
+@base-body-font-weight:     normal;
+@base-body-font-size:       18px;
+@base-body-line-height:     24px;
+@base-body-color:           #000;
+
+//Just some basic customizations
+.tm-header {
+	background-color: @cf-green;
+	border: none;
+	padding-top: 30px;
+}
+
+.tm-main {
+	background-color: transparent;
+	border: none;
+}
+
+.cf-content-header-box {
+	background-color: inherit;
+
+	.uk-article-title {
+		color: #fff;
+	}
+
+	.uk-text-center;
+}
+
+.tm-footer {
+	border: none;
+	padding-bottom: 0px !important;
+	background-color: @cf-green;
+}
+
+.uk-panel-box {
+	background-color: transparent;
+	border: none;
+}
+
+.cf-footer-columns {
+	color: #000;
+	h2.widgettitle {
+		.uk-h3;
+		color: #fff;
+	}
+
+	a {
+		color: darken(@cf-orange,50%);
+	}
+
+	a:hover {
+		color: @cf-orange;
+	}
+
+	ul.menu {
+		list-style: none;
+		padding-left: 0px;
+
+		li {
+			line-height: 1.3em;
+		}
+	}
+
+}
+
+@cf-menu-selector:	~'.tm-primary-menu .uk-navbar-nav > li';
+
+@{cf-menu-selector} > a:hover,
+@{cf-menu-selector} > a:focus,
+@{cf-menu-selector}.uk-active a,
+@{cf-menu-selector}.current_page_ancestor a,
+@{cf-menu-selector}.current_page_ancestor a:hover,
+@{cf-menu-selector}.menu-item-has-children.uk-open a,
+.tm-primary-menu .uk-dropdown-navbar,
+{
+	color: #fff !important;
+}
+
+/*
+* The rest is essentially what runs the colored menu tabs.  The @sections correspond to the demo pages created in the class CF_Menus.
+*/
+
+//Hex values are defined above (for possible other uses) and assigned to sections here.
+@cf-home:                   @cf-grey;
+@cf-who:                    @cf-blue;
+@cf-what:                   @cf-purple;
+@cf-join:                   @cf-orange;
+@cf-contact:                @cf-yellow;
+@cf-no-section:             @cf-orange;
+
+/*
+* We will loop through the section names and assign background colors to tabs and section headers accordingly.
+* These section names are appended via the Beans API to class names in the corresponding HTML elements.
+* For example, the section header div has a class name cf-header-home, cf-header-who, etc. dynamically assigned based on
+* the WordPress ID and ancestry.
+*/
+
+@sections:  home, who, what, join, contact;
+@colors:    @cf-home, @cf-who, @cf-what, @cf-join, @cf-contact;
+@length:    5; // The LESS length() function is not working for some reason.
+
+
+.section-variation(@sections; @colors; @i) when (@i > 0) {
+
+    @this-section:  extract(@sections, @i);
+    @this-color:    extract(@colors, @i);
+
+    //Background color assigned to top-level menu tabs, even if we're on a child page within a section.
+    .menu-@{this-section} .uk-dropdown-navbar,
+    .menu-@{this-section}.uk-active a,
+    .menu-@{this-section}.current_menu_ancestor a   {
+        background-color: @this-color !important;
+    }
+
+    //Menu tab background color slightly darkened on hover.
+    .menu-@{this-section} a:hover,
+    .menu-@{this-section} a:focus,
+    .menu-@{this-section}.uk-open > a
+     {
+        background-color: darken(@this-color,5%) !important;
+        color: #fff;
+    }
+
+    //Background color assigned to section header.
+    .cf-header-@{this-section} {
+        background-color: @this-color;
+    }
+
+    //Decrements the loop
+    .section-variation(@sections; @colors; (@i - 1));
+}
+
+//Runs the loop defined above
+.section-variation(@sections; @colors; @length);
