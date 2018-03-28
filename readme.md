@@ -1,6 +1,6 @@
 # Section-Specific Colored Tabs for WordPress
 
-## Demonstration of Oject-Oriented Beans/UIKit Implementation
+## Demonstration of Beans/UIKit Implementation
 
 Sometimes it's a nice idea to use colors to represent different sections of a large site. It is certainly possible in WordPress, but most themes don't offer this capability easily.
 

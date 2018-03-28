@@ -2,21 +2,22 @@
 
 class CF_Layout {
 
-    public function __construct($post_id) {
-        $this->cf_menus   =  new CF_Menus($post_id);
-        $this->post_id = $post_id;
+    public function __construct() {
+        add_action( 'beans_uikit_enqueue_scripts',  array($this,'cf_enqueue_uikit_assets') );
+        add_action( 'wp',                           array($this,'override_beans_defaults' ) );
+        add_filter( 'beans_layout',                 array($this,'cf_set_sidebars') );
     }
 
     public function cf_enqueue_uikit_assets() {
-
         beans_compiler_add_fragment( 'uikit', get_stylesheet_directory_uri() . '/style.less', 'less' );
         beans_uikit_enqueue_components( array( 'overlay','cover','flex','modal') );
     }
 
     public function override_beans_defaults() {
-        $parent = wp_get_post_parent_id( $this->post_id );
-        if (is_page($this->post_id) ) {
-            $this->section_color    = $this->cf_menus->section_color();
+        global $post;
+        $parent = wp_get_post_parent_id( $post->ID );
+        if (is_page($post->ID) ) {
+            $section_color    = $this->section_color();
 
             if(!$parent && $this->cf_menus->section_color=="no-section") {
                 //
@@ -24,7 +25,7 @@ class CF_Layout {
                 beans_replace_action('beans_post_title','cf_content_header_box_prepend_markup');
             }
         } else {
-            $this->$section_color   = "no-section";
+            $section_color   = "no-section";
         }
 
         beans_remove_action('beans_site_title_tag');
@@ -46,18 +47,23 @@ class CF_Layout {
         beans_add_attribute('beans_footer','class','uk-padding-remove');
 
         //Use the section color for the footer,too, if desired.
-        beans_add_attribute('beans_footer','class', 'cf-header-' . $this->section_color);
+        beans_add_attribute('beans_footer','class', 'cf-header-' . $section_color);
 
         //Adds footer columns and centered copyright block.
         add_action( 'beans_footer_prepend_markup',        array($this,'cf_footer_columns'));
         add_action( 'beans_footer_after_markup',          array($this,'cf_footer_credit'));
 
-        //Hides the default Beans copyright block.
-        beans_modify_action_callback( 'beans_footer_content',   array($this,'hide_beans_copyright'));
+
+
+        //Since Beans gives an ID to just about every element on the page, it is possible to hook into specific
+        //menu items and assign them class names that will determine their background color via LESS.
+        $this->assign_menu_item_classes("Navigation");
+
+        //Removes the default triangle icon indicating a submenu in a vanilla Beans install.
+        beans_remove_action('beans_menu_item_child_indicator');
     }
 
-    public function cf_blog_sidebar() {
-
+    public function cf_set_sidebars() {
         if (is_single() || is_post_type_archive('post') ) {
             //per Beans, "content" + "sidebar primary"
             return 'c_sp';
@@ -67,10 +73,22 @@ class CF_Layout {
         }
     }
 
+    public function demo_menu_items() {
+        $menu_items = array (
+            "Home"          => "home",
+            "Who We Are"    => "who",
+            "What We Do"    => "what",
+            "Join Us"       => "join",
+            "Contact"       => "contact"
+        );
+
+        return $menu_items;
+    }
+
     public function cf_content_header() {
 
         //div with image or colored background
-        echo beans_open_markup('cf_content_header_full','div',array('class'=>'cf-header cf-header-'. $this->section_color ));
+        echo beans_open_markup('cf_content_header_full','div',array('class'=>'cf-header cf-header-'. $this->section_color() ));
 
             //centered container
             echo beans_open_markup('cf_content_header_container','div',array('class'=>'cf-content-header uk-container uk-container-center'));
@@ -115,7 +133,43 @@ class CF_Layout {
         echo beans_close_markup('cf_copyright','div');
     }
 
-    function hide_beans_copyright() {
-        return "";
+    public function assign_menu_item_classes($which_menu) {
+        //Adds a class to each menu item corresponding to the list of pages, in this case the demo list.
+
+        $menu_object    = wp_get_nav_menu_items($which_menu);
+        $menu_ids       = wp_list_pluck($menu_object,'ID','title');
+
+        $menu_colors = array();
+
+        foreach($this->demo_menu_items() as $item_name=>$item_slug) {
+            $menu_colors[$item_slug] = $menu_ids[$item_name];
+        }
+
+        foreach ($menu_colors as $item_slug=>$item_id) {
+            beans_add_attribute('beans_menu_item_' . $item_id,'class','menu-' . $item_slug);
+        }
+    }
+
+    public function section_color() {
+        //Determines what section a given current page is, based on its ancestry and assigns a section header background color.
+        global $post;
+        $section_color_map = array();
+
+        foreach ($this->demo_menu_items() as $this_name=>$this_slug) {
+            $this_page  = get_page_by_title($this_name);
+            $section_color_map[$this_page->ID] = $this_slug;
+        }
+
+        $ancestors = array_reverse(get_ancestors($this->post_id, 'page', 'post_type' ));
+
+        $root_ancestor = $ancestors[0];
+
+        if (!$root_ancestor) {
+            $root_ancestor = $post->ID;
+        }
+
+        $color = $section_color_map[$root_ancestor];
+
+        return $color;
     }
 }
